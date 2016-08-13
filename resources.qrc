@@ -1,0 +1,10 @@
+<RCC>
+  <qresource prefix="icon">
+    <file>res/addCSV.png</file>
+    <file>res/addSHP.png</file>
+    <file>res/reload.png</file>
+    <file>res/search.png</file>
+    <file>res/zoomIn.png</file>
+    <file>res/zoomOut.png</file>
+  </qresource>
+</RCC>
