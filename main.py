@@ -9,6 +9,7 @@ from PyQt4.QtGui import *
 from qgis.core import *
 from qgis.gui import *
 import subprocess
+from pyspatialite import dbapi2 as db
 import sys
 import os
 
@@ -55,7 +56,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 		# self.canvas.setLayerSet(self.layers)
 
 		uri = QgsDataSourceURI()
-		uri.setDatabase('db.sqlite')
+		uri.setDatabase('database.sqlite')
 		uri.setDataSource('', 'db','geometry')
 		vlayer = QgsVectorLayer(uri.uri(), 'TestLayer', 'spatialite')
 		QgsMapLayerRegistry.instance().addMapLayer(vlayer)
@@ -122,7 +123,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 		
 		# Add layer
 		layer = QgsVectorLayer(file, fileInfo.fileName(), "ogr")
-		subprocess.call(["spatialite_tool", "-i", "-shp", str(file).strip('.shp'), "-d", "db.sqlite", "-t", 'db', "-g", "GEOMETRY", "-c", "UTF-8","-s","3042", "--type", "MULTIPOLYGON"])
+		# subprocess.call(["spatialite_tool", "-i", "-shp", str(file).strip('.shp'), "-d", "db.sqlite", "-t", 'db', "-g", "GEOMETRY", "-c", "UTF-8","-s","3042", "--type", "MULTIPOLYGON"])
+
+		# creating/connecting the test_db
+		conn = db.connect('database.sqlite')
+
+		# creating a Cursor
+		cur = conn.cursor()
+		sql = 'CREATE VIRTUAL TABLE ne50pp USING VirtualShape("'+str(file).strip('.shp')+'", "CP1251", 4326)'
+		cur.execute(sql)
+
+		sql = 'INSERT INTO db (name, geometry) SELECT date("now") as name, Geometry as Geometry FROM ne50pp'
+		cur.execute(sql)		
+		
+		sql = 'DROP TABLE ne50pp'
+		cur.execute(sql)
 
 		if not layer.isValid():
 			return
