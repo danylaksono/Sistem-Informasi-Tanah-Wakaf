@@ -6,5 +6,8 @@ file utama = main.py
 
 Next Quest
 =================
-- buat tool untuk milih tiap fitur
-- buat dock untuk menampilkan data atribut fitur terseleksi, edit fitur, dan hapus fitur
+- buat tool untuk milih tiap fitur <done>
+- buat dock untuk menampilkan :
+ --data atribut fitur terseleksi, 
+ --edit fitur,
+ --hapus fitur

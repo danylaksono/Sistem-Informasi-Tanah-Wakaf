@@ -68,7 +68,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 		uri = QgsDataSourceURI()
 		uri.setDatabase('database.sqlite')
 		uri.setDataSource('', 'db','geometry')
-		vlayer = QgsVectorLayer(uri.uri(), 'TestLayer', 'spatialite')
+		vlayer = QgsVectorLayer(uri.uri(), 'lTanahWakaf', 'spatialite')
 		QgsMapLayerRegistry.instance().addMapLayer(vlayer)
 		self.canvas.setExtent(vlayer.extent())
 		vlayer = QgsMapCanvasLayer(vlayer)
@@ -83,7 +83,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 		self.actionZoomOut = QAction(QIcon("res/ZoomOut.png"), "Zoom Out", self.frame)
 		# self.actionZoomExt = QAction(QIcon("res/extent.png"), "Zoom Extent", self.frame)
 		self.actionPan = QAction(QIcon("res/pan.png"), "Pan", self.frame)
-		self.actionSelect = QAction(QIcon("res/extent.png"), "Select", self.frame)
+		self.actionSelect = QAction(QIcon("res/select.png"), "Select", self.frame)
 
 
 		# Connect action to method
@@ -112,19 +112,29 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 		self.toolZoomIn = QgsMapToolZoom(self.canvas, False)
 		self.toolZoomOut = QgsMapToolZoom(self.canvas, True)
 		self.toolPan = QgsMapToolPan(self.canvas)
+		self.toolSelect = QgsMapToolEmitPoint(self.canvas)
 
 	# Set map tool to select feature
 	def select(self):
-		layer = self.layers[0];
-		iter = layer.getFeatures();
-		selection = []
-		for feature in iter:
-			selection.append(feature.id())
-		layer.setSelectedFeatures(selection)
-		self.iface.mapCanvas().setSelectionColor(QColor("yellow"));
-		selected_features = layer.selectedFeatures()
-		self.iface.mapCanvas().zoomToSelected( layer )
-		self.iface.mapCanvas().refresh()
+		self.canvas.setMapTool(self.toolSelect)
+		self.connect(self.toolSelect, SIGNAL("canvasClicked(const QgsPoint &,Qt::MouseButton)"), self.selectFeature)
+
+	def selectFeature(self, point):
+		active = QgsMapLayerRegistry.instance().mapLayersByName("lTanahWakaf")[0]
+		active.removeSelection()
+
+		searchRadius = self.canvas.mapUnitsPerPixel() * 5
+		rect = QgsRectangle()
+		rect.setXMinimum( point.x() - searchRadius )
+		rect.setXMaximum( point.x() + searchRadius )
+		rect.setYMinimum( point.y() - searchRadius )
+		rect.setYMaximum( point.y() + searchRadius )
+		
+		active.select(rect, False)
+		selected = active.selectedFeatures()
+		for feature in selected:
+			# feature.setSelectionColor( QColor("red") )
+			print feature.id()
 
 	# Set map tool to Zoom In
 	def zoomIn(self):
