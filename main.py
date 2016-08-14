@@ -23,24 +23,45 @@ qgis_prefix = os.getenv("QGISHOME")
 class MainWindow(QMainWindow, Ui_MainWindow):
 	def __init__(self):	
 		QMainWindow.__init__(self)
-		#initialize UI
+		# initialize UI
 		self.setupUi(self)
 
-		#set title
+		# set title
 		self.setWindowTitle("Sistem Informasi Tanah Wakaf")
 
-		#create the map canvas
+		# create the map canvas
 		self.canvas = QgsMapCanvas()
-		#set the background color
+		# set the background color
 		self.canvas.setCanvasColor(QColor(255,255,255))
 		self.canvas.enableAntiAliasing(True)
 		self.canvas.useImageToRender(False)
 		self.canvas.show()
 
-		#layout widget
-		#vertical box layout
+		# layout widget
+		# vertical box layout
 		self.layout = QVBoxLayout(self.frame)
 		self.layout.addWidget(self.canvas)
+
+		# create dock info
+		self.dockInfo = QDockWidget("Info Fitur", self)
+		# self.listWidget = QListWidget()
+		# self.listWidget.addItem("item1")
+		# self.listWidget.addItem("item2")
+		# self.listWidget.addItem("item3")
+		self.label = ["Nama Pemilik", "Peruntukan", "Luas"]
+		self.tabel = QTableWidget()
+		self.tabel.setColumnCount(2)
+		self.tabel.setRowCount(len(self.label))
+		self.tabel.setHorizontalHeaderLabels(["Atribut","Value"])
+		for i in range(len(self.label)):
+			item = QTableWidgetItem()
+			item.setText(self.label[i])
+			self.tabel.setItem(i,0,item)
+		self.dockInfo.setWidget(self.tabel)
+		self.dockInfo.setFloating(False)
+		self.dockInfo.setFeatures(QDockWidget.DockWidgetFloatable | QDockWidget.DockWidgetMovable)
+		self.addDockWidget(Qt.RightDockWidgetArea, self.dockInfo)
+
 		
 		# Create Layer Set
 		self.layers = []
@@ -54,16 +75,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 		# rlayer = QgsMapCanvasLayer(rlayer)
 		# self.layers.append(rlayer)
 		# self.canvas.setLayerSet(self.layers)
-
-		# Dock
-		self.items = QDockWidget("Dockable", self)
-		self.listWidget = QListWidget()
-		self.listWidget.addItem("item1")
-		self.listWidget.addItem("item2")
-		self.listWidget.addItem("item3")
-		self.items.setWidget(self.listWidget)
-		self.items.setFloating(False)
-		self.addDockWidget(Qt.RightDockWidgetArea, self.items)
 
 		uri = QgsDataSourceURI()
 		uri.setDatabase('database.sqlite')
@@ -135,6 +146,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 		for feature in selected:
 			# feature.setSelectionColor( QColor("red") )
 			print feature.id()
+			self.showDock()
 
 	# Set map tool to Zoom In
 	def zoomIn(self):
