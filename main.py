@@ -55,6 +55,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 		# self.layers.append(rlayer)
 		# self.canvas.setLayerSet(self.layers)
 
+		# Dock
+		self.items = QDockWidget("Dockable", self)
+		self.listWidget = QListWidget()
+		self.listWidget.addItem("item1")
+		self.listWidget.addItem("item2")
+		self.listWidget.addItem("item3")
+		self.items.setWidget(self.listWidget)
+		self.items.setFloating(False)
+		self.addDockWidget(Qt.RightDockWidgetArea, self.items)
+
 		uri = QgsDataSourceURI()
 		uri.setDatabase('database.sqlite')
 		uri.setDataSource('', 'db','geometry')
@@ -71,7 +81,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 		self.actionReloadDisp = QAction(QIcon("res/reload.png"), "Reload", self.frame)
 		self.actionZoomIn = QAction(QIcon("res/ZoomIn.png"), "Zoom In", self.frame)
 		self.actionZoomOut = QAction(QIcon("res/ZoomOut.png"), "Zoom Out", self.frame)
+		# self.actionZoomExt = QAction(QIcon("res/extent.png"), "Zoom Extent", self.frame)
 		self.actionPan = QAction(QIcon("res/pan.png"), "Pan", self.frame)
+		self.actionSelect = QAction(QIcon("res/extent.png"), "Select", self.frame)
+
 
 		# Connect action to method
 		self.connect(self.actionAddShp, SIGNAL("activated()"), self.addShp)
@@ -79,7 +92,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 		self.connect(self.actionReloadDisp, SIGNAL("activated()"), self.reloadDisp)
 		self.connect(self.actionZoomIn, SIGNAL("activated()"), self.zoomIn)
 		self.connect(self.actionZoomOut, SIGNAL("activated()"), self.zoomOut)
+		# self.connect(self.actionZoomExt, SIGNAL("activated()"), self.zoomExt)
 		self.connect(self.actionPan, SIGNAL("activated()"), self.pan)
+		self.connect(self.actionSelect, SIGNAL("activated()"), self.select)
 
 		# Create toolbar
 		self.toolbar = self.addToolBar("Map")
@@ -89,12 +104,27 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 		self.toolbar.addAction(self.actionReloadDisp)
 		self.toolbar.addAction(self.actionZoomIn)
 		self.toolbar.addAction(self.actionZoomOut)
+		# self.toolbar.addAction(self.actionZoomExt)
 		self.toolbar.addAction(self.actionPan)
+		self.toolbar.addAction(self.actionSelect)
 
 		# Create map tools
 		self.toolZoomIn = QgsMapToolZoom(self.canvas, False)
 		self.toolZoomOut = QgsMapToolZoom(self.canvas, True)
 		self.toolPan = QgsMapToolPan(self.canvas)
+
+	# Set map tool to select feature
+	def select(self):
+		layer = self.layers[0];
+		iter = layer.getFeatures();
+		selection = []
+		for feature in iter:
+			selection.append(feature.id())
+		layer.setSelectedFeatures(selection)
+		self.iface.mapCanvas().setSelectionColor(QColor("yellow"));
+		selected_features = layer.selectedFeatures()
+		self.iface.mapCanvas().zoomToSelected( layer )
+		self.iface.mapCanvas().refresh()
 
 	# Set map tool to Zoom In
 	def zoomIn(self):
@@ -105,16 +135,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 		self.canvas.setMapTool(self.toolZoomOut)
 
 	# Set map tool to Zoom Out
-	def reloadDisp(self):
-		self.canvas.setMapTool(self.toolZoomOut)
-
-	# Set map tool to Zoom Out
 	def addCsv(self):
 		self.canvas.setMapTool(self.toolZoomOut)
-
+	
+	# Set map tool to Zoom Extent
+	# def zoomExt(self ):
+	# 	self.canvas.fullExtent()
+	
 	# Set map tool to Pan
 	def pan(self):
 		self.canvas.setMapTool(self.toolPan)
+
+	# Set map tool to Refresh
+	def reloadDisp(self):
+	    self.canvas.refresh()
 
 	# Set map tool to add shapefile
 	def addShp(self):
